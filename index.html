@@ -685,7 +685,6 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     const upd = p.updated ? new Date(p.updated).toLocaleDateString("fr-FR") : "—";
     const mkRow = (src, lab, val, cls2) => `<div class="mk-row"><span class="mk-src ${cls2 || ""}">${src}</span><span class="mk-lab">${lab}</span><span class="mk-val">${val}</span></div>`;
     const rows = [
-      p.low != null && mkRow("Cardmarket", "À partir de", eur(p.low)),
       p.trend != null && mkRow("Cardmarket", "Tendance des prix", eur(p.trend)),
       p.avg7 != null && mkRow("Cardmarket", "Prix moyen 7 jours", eur(p.avg7)),
       p.avg1 != null && mkRow("Cardmarket", "Prix moyen 1 jour", eur(p.avg1)),
@@ -711,9 +710,9 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
       <div class="mk">
         <h4>Prix du marché ${flagOf(c)}</h4>
         ${rows || `<p class="mk-lab" style="margin:0">Pas encore de prix pour cette carte.</p>`}
-        <p class="mk-lab" style="margin:0;font-size:12.5px">Cardmarket calcule ces prix sur les ventes de toutes les langues. Pour voir uniquement les offres ${langWord}, ouvre la carte sur Cardmarket ci-dessous.</p>
+        <p class="mk-lab" style="margin:0;font-size:12.5px">Cardmarket calcule ces prix sur les ventes de toutes les langues. Pour le prix le plus bas ${langWord}, ouvre la carte sur Cardmarket ci-dessous.</p>
         <div class="mk-foot"><span>Dernière mise à jour : ${upd}</span><span>${s.fresh ? "Prix du jour ✓" : s.stale ? "Hors ligne : derniers prix connus" : "Actualisation…"}</span></div>
-        <a class="buy" href="${esc(cm)}" target="_blank" rel="noopener">${c.cmId ? `Offres ${langWord} sur Cardmarket` : "Chercher sur Cardmarket"} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
+        <a class="buy" href="${esc(cm)}" target="_blank" rel="noopener">${c.cmId ? `Prix le plus bas ${langWord} sur Cardmarket` : "Chercher sur Cardmarket"} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
         ${c.tcgId ? `<a class="buy alt" href="https://www.tcgplayer.com/product/${encodeURIComponent(c.tcgId)}" target="_blank" rel="noopener">Voir sur TCGplayer <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>` : ""}
       </div>
       <div class="box">
