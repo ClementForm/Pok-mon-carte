@@ -676,13 +676,17 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     const c = cards[s.key] || s.doc, saved = !!cards[s.key], p = c.last || {}, a = analyse(c), q = c.owned || 0, mp = mainPrice(c), L = langOf(c);
     const isUS = L === "en" && p.tcg != null;
     const cmQ = (L === "ja" ? c.name : (c.enName || c.name)) + (c.localId ? " " + String(c.localId).replace(/^0+/, "") : "");
-    const cm = "https://www.cardmarket.com/fr/Pokemon/Products/Search?searchString=" + encodeURIComponent(cmQ);
+    // Lien direct vers la fiche Cardmarket, filtrée sur la langue de la carte (2 = français, 7 = japonais, 1 = anglais)
+    const cmLang = { fr: 2, ja: 7, en: 1 }[L];
+    const cm = c.cmId ? `https://www.cardmarket.com/fr/Pokemon/Products?idProduct=${encodeURIComponent(c.cmId)}&language=${cmLang}`
+      : "https://www.cardmarket.com/fr/Pokemon/Products/Search?searchString=" + encodeURIComponent(cmQ);
+    const langWord = { fr: "en français", ja: "en japonais", en: "en anglais" }[L];
     const num = c.localId ? (c.setTotal ? `${c.localId}/${c.setTotal}` : `#${c.localId}`) : "";
     const upd = p.updated ? new Date(p.updated).toLocaleDateString("fr-FR") : "—";
     const mkRow = (src, lab, val, cls2) => `<div class="mk-row"><span class="mk-src ${cls2 || ""}">${src}</span><span class="mk-lab">${lab}</span><span class="mk-val">${val}</span></div>`;
     const rows = [
       p.trend != null && mkRow("Cardmarket", "Cote (tendance)", eur(p.trend)),
-      p.low != null && mkRow("Cardmarket", "Prix le plus bas", eur(p.low)),
+      p.low != null && mkRow("Cardmarket", "À partir de", eur(p.low)),
       p.avg7 != null && mkRow("Cardmarket", "Moyenne 7 jours", eur(p.avg7)),
       p.avg30 != null && mkRow("Cardmarket", "Moyenne 30 jours", eur(p.avg30)),
       p.tcg != null && mkRow("TCGplayer", "Prix du marché (US)", usd(p.tcg), "tcg"),
@@ -707,8 +711,9 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
       <div class="mk">
         <h4>Prix du marché ${flagOf(c)}</h4>
         ${rows || `<p class="mk-lab" style="margin:0">Pas encore de prix pour cette carte.</p>`}
+        <p class="mk-lab" style="margin:0;font-size:12.5px">Cardmarket calcule ces prix sur les ventes de toutes les langues. Pour voir uniquement les offres ${langWord}, ouvre la carte sur Cardmarket ci-dessous.</p>
         <div class="mk-foot"><span>Dernière mise à jour : ${upd}</span><span>${s.fresh ? "Prix du jour ✓" : s.stale ? "Hors ligne : derniers prix connus" : "Actualisation…"}</span></div>
-        <a class="buy" href="${esc(cm)}" target="_blank" rel="noopener">Acheter sur Cardmarket <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
+        <a class="buy" href="${esc(cm)}" target="_blank" rel="noopener">${c.cmId ? `Offres ${langWord} sur Cardmarket` : "Chercher sur Cardmarket"} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
         ${c.tcgId ? `<a class="buy alt" href="https://www.tcgplayer.com/product/${encodeURIComponent(c.tcgId)}" target="_blank" rel="noopener">Voir sur TCGplayer <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>` : ""}
       </div>
       <div class="box">
