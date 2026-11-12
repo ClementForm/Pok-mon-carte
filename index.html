@@ -203,6 +203,37 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
 .links a{color:var(--accent);font-weight:600;text-decoration:none;font-size:14.5px}
 .actions2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}
+.dh{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;margin-top:-6px}
+.dh h3{font-size:28px;line-height:1.1}
+.dh h3 .no{font-family:var(--f-body);font-weight:500;font-size:17px;color:var(--muted);margin-left:6px;white-space:nowrap}
+.dh .logo{max-height:46px;max-width:170px;object-fit:contain}
+.dh .st{font-size:14px;color:var(--muted)}
+.d-hero{align-self:center;width:min(74%,320px);aspect-ratio:63/88;border-radius:16px;overflow:hidden;background:var(--surface2);box-shadow:0 18px 50px rgb(0 0 0 / .55);display:block;position:relative}
+.d-hero img{width:100%;height:100%;object-fit:cover;display:block}
+.rar{align-self:center;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:14.5px;font-weight:500}
+.rar svg{width:16px;height:16px;color:var(--accent)}
+.d-price{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.d-price .big{font-family:var(--f-display);font-weight:800;font-size:40px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.src{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:13.5px;font-weight:600;background:var(--surface)}
+.d-sub{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;align-items:center}
+.d-sub .pill{font-family:var(--f-mono);font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:3px 8px}
+.cta{display:grid;grid-template-columns:1fr auto;gap:10px}
+.cta .btn{border-radius:999px;padding:0 16px;height:54px;font-size:15.5px;white-space:nowrap;overflow:hidden}
+.cta .btn .dim{font-weight:500;opacity:.7}
+.cta .round{width:54px;padding:0;border-radius:50%;font-size:24px}
+.cta.one{grid-template-columns:1fr}
+.btn.outline{background:transparent;border:1px solid var(--line);border-radius:999px;padding:14px 18px;font-size:16px}
+.mk{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.mk h4{margin:0;font-family:var(--f-display);font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px}
+.mk-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}
+.mk-src{background:var(--ink);color:var(--bg);border-radius:9px;padding:6px 10px;font-size:12.5px;font-weight:700;min-width:98px;text-align:center;letter-spacing:-.01em}
+.mk-src.tcg{background:#DDE6FF;color:#0E1A44}
+.mk-lab{color:var(--muted);font-size:14.5px;overflow:hidden;text-overflow:ellipsis}
+.mk-val{font-family:var(--f-mono);font-size:16px;font-variant-numeric:tabular-nums;text-align:right}
+.mk-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.buy{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--ink);color:var(--bg);border-radius:999px;padding:15px;font-weight:700;font-size:16px;text-decoration:none}
+.buy.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.buy svg{width:16px;height:16px}
 .d-loading{padding:60px 0;text-align:center;color:var(--muted)}
 .disc{font-size:12px;color:var(--muted);margin:0}
 </style>
@@ -398,6 +429,9 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     return { id: card.id, lang, key: keyOf(lang, card.id), name: card.name, setName: card.set?.name || "", setId: card.set?.id || "", localId: card.localId || "", rarity: card.rarity || "",
       image: card.image || prev?.image || null, enName: prev?.enName || (lang === "en" ? card.name : null),
       tcgId: card.variants_detailed?.[0]?.thirdParty?.tcgplayer ?? prev?.tcgId ?? null,
+      cmId: card.pricing?.cardmarket?.idProduct ?? card.variants_detailed?.[0]?.thirdParty?.cardmarket ?? prev?.cmId ?? null,
+      setTotal: card.set?.cardCount?.official ?? prev?.setTotal ?? null, setLogo: card.set?.logo || prev?.setLogo || null,
+      tcgLow: (() => { const tp = card.pricing?.tcgplayer || {}; const tv = tp.holofoil || tp.normal || tp.reverse || Object.values(tp).find(v => v && typeof v === "object") || {}; return tv.lowPrice ?? null; })(),
       last, history: history.slice(-180), fetchedAt: new Date().toISOString(), addedAt: prev?.addedAt || new Date().toISOString(),
       owned: prev?.owned ?? 0, paid: prev?.paid ?? null, example: prev?.example ?? false };
   }
@@ -620,64 +654,72 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     const { lang, id } = parseKey(key);
     const saved = cards[key];
     const fromTrend = lang === "fr" ? trends.docs.find(c => c.id === id) : null;
-    ui.sheet = { key, id, lang, doc: saved || dcache.get(key) || fromTrend || null };
-    $("#sheet").hidden = false; document.body.style.overflow = "hidden";
+    ui.sheet = { key, id, lang, doc: saved || dcache.get(key) || fromTrend || null, fresh: false };
+    $("#sheet").hidden = false; document.body.style.overflow = "hidden"; $("#panel").scrollTop = 0;
     renderSheet();
-    if (!ui.sheet.doc) {
-      try {
-        const card = await getJSON(`${api(lang)}/cards/${encodeURIComponent(id)}`);
-        if (ui.sheet?.key !== key) return;
-        ui.sheet.doc = cardDoc(card, cards[key] || null, lang); dcache.set(key, ui.sheet.doc); renderSheet();
-      } catch { if (ui.sheet?.key === key) { ui.sheet.err = true; renderSheet(); } }
-    }
+    // Toujours relire la carte : prix du jour + infos complètes
+    try {
+      const card = await getJSON(`${api(lang)}/cards/${encodeURIComponent(id)}`);
+      if (ui.sheet?.key !== key) return;
+      const doc = cardDoc(card, cards[key] || ui.sheet.doc || null, lang);
+      dcache.set(key, doc); ui.sheet.doc = doc; ui.sheet.fresh = true;
+      if (cards[key]) { cards[key] = { ...doc, key, owned: cards[key].owned, paid: cards[key].paid, addedAt: cards[key].addedAt, example: cards[key].example }; save(); renderAll(); }
+      renderSheet();
+    } catch { if (ui.sheet?.key === key) { if (!ui.sheet.doc) ui.sheet.err = true; else ui.sheet.stale = true; renderSheet(); } }
   }
   function closeSheet() { $("#sheet").hidden = true; document.body.style.overflow = ""; ui.sheet = null; }
   function renderSheet() {
     const s = ui.sheet; if (!s) return;
-    const panel = $("#panel");
+    const panel = $("#panel"), keepScroll = panel.scrollTop;
     const head = `<div class="grab"><span class="bar"></span><span></span><button class="icon-btn" type="button" data-x="close" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
     if (!s.doc) { panel.innerHTML = `<div class="panel-in">${head}<div class="d-loading">${s.err ? netMsg() : "Chargement de la carte…"}</div></div>`; return; }
-    const c = cards[s.key] || s.doc, saved = !!cards[s.key], p = c.last || {}, a = analyse(c), q = c.owned || 0, mp = mainPrice(c);
-    const cm = "https://www.cardmarket.com/fr/Pokemon/Products/Search?searchString=" + encodeURIComponent((c.enName || c.name) + (c.localId ? " " + String(c.localId).replace(/^0+/, "") : ""));
+    const c = cards[s.key] || s.doc, saved = !!cards[s.key], p = c.last || {}, a = analyse(c), q = c.owned || 0, mp = mainPrice(c), L = langOf(c);
+    const isUS = L === "en" && p.tcg != null;
+    const cmQ = (L === "ja" ? c.name : (c.enName || c.name)) + (c.localId ? " " + String(c.localId).replace(/^0+/, "") : "");
+    const cm = "https://www.cardmarket.com/fr/Pokemon/Products/Search?searchString=" + encodeURIComponent(cmQ);
+    const num = c.localId ? (c.setTotal ? `${c.localId}/${c.setTotal}` : `#${c.localId}`) : "";
+    const upd = p.updated ? new Date(p.updated).toLocaleDateString("fr-FR") : "—";
+    const mkRow = (src, lab, val, cls2) => `<div class="mk-row"><span class="mk-src ${cls2 || ""}">${src}</span><span class="mk-lab">${lab}</span><span class="mk-val">${val}</span></div>`;
+    const rows = [
+      p.trend != null && mkRow("Cardmarket", "Cote (tendance)", eur(p.trend)),
+      p.low != null && mkRow("Cardmarket", "Prix le plus bas", eur(p.low)),
+      p.avg7 != null && mkRow("Cardmarket", "Moyenne 7 jours", eur(p.avg7)),
+      p.avg30 != null && mkRow("Cardmarket", "Moyenne 30 jours", eur(p.avg30)),
+      p.tcg != null && mkRow("TCGplayer", "Prix du marché (US)", usd(p.tcg), "tcg"),
+      c.tcgLow != null && mkRow("TCGplayer", "Prix le plus bas (US)", usd(c.tcgLow), "tcg")
+    ].filter(Boolean).join("");
+    const star = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.8 2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg>`;
     panel.innerHTML = `<div class="panel-in">${head}
-      <div class="d-top">
-        <a class="d-img" href="${c.image ? esc(c.image) + "/high.webp" : "#"}" target="_blank" rel="noopener">${c.image ? `<img src="${esc(c.image)}/high.webp" alt="${esc(c.name)}">` : `<span class="ph">${esc(c.name)}</span>`}</a>
-        <div class="d-info">
-          <h3 id="d-name">${esc(c.name)}</h3>
-          <div class="st">${esc([c.setName, c.localId && "n° " + c.localId, c.rarity].filter(Boolean).join(" · "))}</div>
-          <div class="pr">${flagOf(c)} ${mp.txt}</div>
-          ${langOf(c) === "en" && p.tcg != null && p.trend != null ? `<div class="pq">TCGplayer (US) · Cardmarket : ${eur(p.trend)}</div>` : langOf(c) === "en" ? "" : `<div class="pq">Cote Cardmarket</div>`}
-          ${q > 1 && p.trend != null ? `<div class="pq">${q} exemplaires = ${eur(p.trend * q)}</div>` : ""}
-          <div class="d-chg"><span class="${cls(a.d7)}">${pct(a.d7)} · 7 j</span><span class="${cls(a.d30)}">${pct(a.d30)} · 30 j</span></div>
-          <span><span class="sig ${a.sig}">${a.label}</span></span>
-        </div>
+      <div class="dh">
+        <h3 id="d-name">${esc(c.name)}${num ? `<span class="no">· ${esc(num)}</span>` : ""}</h3>
+        ${c.setLogo ? `<img class="logo" src="${esc(c.setLogo)}.webp" alt="${esc(c.setName)}" onerror="this.remove()">` : ""}
+        <div class="st">${esc(c.setName || "")}${L !== "fr" ? ` · ${LANGS[L].flag}` : ""}</div>
       </div>
-      ${saved ? `<div class="box">
-        <h4>Ma collection</h4>
-        ${q ? `<div class="own-row"><span>Exemplaires</span><span class="stepper"><button type="button" data-x="qm" aria-label="Retirer un exemplaire">−</button><span class="num">${q}</span><button type="button" data-x="qp" aria-label="Ajouter un exemplaire">+</button></span></div>
+      <a class="d-hero ${c.image ? "" : "noimg"}" data-name="${esc(c.name)}" href="${c.image ? esc(c.image) + "/high.webp" : "#"}" target="_blank" rel="noopener">${c.image ? `<img src="${esc(c.image)}/high.webp" alt="${esc(c.name)}" onerror="this.parentNode.classList.add('noimg');this.remove()">` : ""}</a>
+      ${c.rarity ? `<span class="rar">${star}${esc(c.rarity)}</span>` : ""}
+      <div class="d-price"><span class="big">${mp.txt}</span><span class="src">${isUS ? "TCGplayer" : "Cardmarket"} ${flagOf(c)}</span></div>
+      <div class="d-sub"><span class="pill ${cls(a.d7)}">${pct(a.d7)} · 7 j</span><span class="pill ${cls(a.d30)}">${pct(a.d30)} · 30 j</span><span class="sig ${a.sig}" style="margin:0">${a.label}</span></div>
+      ${q > 1 && p.trend != null ? `<div class="d-sub" style="color:var(--muted);font-size:13.5px">Tes ${q} exemplaires valent ${eur(p.trend * q)}</div>` : ""}
+      ${q ? `<div class="cta"><button class="btn primary" type="button" data-x="qp">＋ Ajouter un exemplaire <span class="dim">· ${q} possédé${q > 1 ? "s" : ""}</span></button><button class="btn round" type="button" data-x="qm" aria-label="Retirer un exemplaire">−</button></div>
           <label class="paid" for="paid">Prix payé${q > 1 ? " (l'unité)" : ""}<input id="paid" type="text" inputmode="decimal" value="${c.paid ?? ""}" placeholder="€" data-x="paid"></label>`
-        : `<div class="own-row"><span style="color:var(--muted)">Dans ta liste de suivi</span><button class="btn primary small" type="button" data-x="qp">J'ai cette carte</button></div>`}
-      </div>` : `<div class="actions2"><button class="btn primary" type="button" data-x="own">J'ai cette carte</button><button class="btn" type="button" data-x="watch">Suivre le prix</button></div>`}
-      <ul class="why">${a.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul>
-      <div class="kv-grid">
-        <div class="kv"><span class="k">Cote</span><span class="v">${eur(p.trend)}</span></div>
-        <div class="kv"><span class="k">Moy. 7 j</span><span class="v">${eur(p.avg7)}</span></div>
-        <div class="kv"><span class="k">Moy. 30 j</span><span class="v">${eur(p.avg30)}</span></div>
-        <div class="kv"><span class="k">Moins cher</span><span class="v">${eur(p.low)}</span></div>
-        <div class="kv"><span class="k">Vente moy.</span><span class="v">${eur(p.avg)}</span></div>
-        <div class="kv"><span class="k">TCGplayer</span><span class="v">${usd(p.tcg)}</span></div>
-        <div class="kv"><span class="k">Signal</span><span class="v">${a.score}/100</span></div>
-        <div class="kv"><span class="k">Cote du</span><span class="v">${p.updated ? new Date(p.updated).toLocaleDateString("fr-FR") : "—"}</span></div>
+        : saved ? `<div class="cta one"><button class="btn primary" type="button" data-x="qp">＋ J'ai cette carte</button></div><div class="d-sub" style="color:var(--muted);font-size:13.5px">Dans ta liste de suivi</div>`
+        : `<div class="cta one"><button class="btn primary" type="button" data-x="own">＋ Ajouter à ma collection</button></div><button class="btn outline" type="button" data-x="watch">Suivre le prix</button>`}
+      <div class="mk">
+        <h4>Prix du marché ${flagOf(c)}</h4>
+        ${rows || `<p class="mk-lab" style="margin:0">Pas encore de prix pour cette carte.</p>`}
+        <div class="mk-foot"><span>Dernière mise à jour : ${upd}</span><span>${s.fresh ? "Prix du jour ✓" : s.stale ? "Hors ligne : derniers prix connus" : "Actualisation…"}</span></div>
+        <a class="buy" href="${esc(cm)}" target="_blank" rel="noopener">Acheter sur Cardmarket <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
+        ${c.tcgId ? `<a class="buy alt" href="https://www.tcgplayer.com/product/${encodeURIComponent(c.tcgId)}" target="_blank" rel="noopener">Voir sur TCGplayer <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>` : ""}
       </div>
-      <div class="links">
-        <a href="${esc(cm)}" target="_blank" rel="noopener">Cardmarket ↗</a>
-        ${c.tcgId ? `<a href="https://www.tcgplayer.com/product/${encodeURIComponent(c.tcgId)}" target="_blank" rel="noopener">TCGplayer ↗</a>` : ""}
-        ${c.image ? `<a href="${esc(c.image)}/high.webp" target="_blank" rel="noopener">Image HD ↗</a>` : ""}
+      <div class="box">
+        <h4>Analyse · signal ${a.score}/100</h4>
+        <ul class="why">${a.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul>
       </div>
       ${saved ? (ui.confirm
         ? `<div class="confirm">Retirer ${esc(c.name)} de tes listes ? <button class="btn small" type="button" data-x="del" style="color:var(--down)">Retirer</button><button class="btn small ghost" type="button" data-x="nodel">Annuler</button></div>`
         : `<button class="btn danger" type="button" data-x="askdel">Retirer de mes listes</button>`) : ""}
     </div>`;
+    panel.scrollTop = keepScroll;
   }
   async function addCard(owned) {
     const d = ui.sheet?.doc; if (!d) return; const k = ui.sheet.key;
