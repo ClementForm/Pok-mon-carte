@@ -418,7 +418,7 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     const tv = tp.holofoil || tp.normal || tp.reverse || tp["reverse-holofoil"] || Object.values(tp).find(v => v && typeof v === "object") || {};
     const pick = (a, b) => (a != null && a !== 0 ? a : (b != null && b !== 0 ? b : null));
     return { trend: pick(cm.trend, cm["trend-holo"]), avg: pick(cm.avg, cm["avg-holo"]), low: pick(cm.low, cm["low-holo"]),
-      avg7: pick(cm.avg7, cm["avg7-holo"]), avg30: pick(cm.avg30, cm["avg30-holo"]), updated: cm.updated || null, tcg: tv.marketPrice ?? null };
+      avg1: pick(cm.avg1, cm["avg1-holo"]), avg7: pick(cm.avg7, cm["avg7-holo"]), avg30: pick(cm.avg30, cm["avg30-holo"]), updated: cm.updated || null, tcg: tv.marketPrice ?? null };
   }
   function cardDoc(card, prev, lang) {
     lang = lang || prev?.lang || "fr";
@@ -687,6 +687,7 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     const rows = [
       p.trend != null && mkRow("Cardmarket", "Cote (tendance)", eur(p.trend)),
       p.low != null && mkRow("Cardmarket", "À partir de", eur(p.low)),
+      p.avg1 != null && mkRow("Cardmarket", "Moyenne 1 jour", eur(p.avg1)),
       p.avg7 != null && mkRow("Cardmarket", "Moyenne 7 jours", eur(p.avg7)),
       p.avg30 != null && mkRow("Cardmarket", "Moyenne 30 jours", eur(p.avg30)),
       p.tcg != null && mkRow("TCGplayer", "Prix du marché (US)", usd(p.tcg), "tcg"),
