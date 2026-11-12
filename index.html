@@ -92,6 +92,7 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
 .noimg{position:relative}
 .noimg::after{content:attr(data-name);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;font-size:12px;color:var(--muted)}
 .art .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;font-size:12px;color:var(--muted)}
+.badge .fl{font-family:system-ui;font-size:12px}
 .badge{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);display:flex;align-items:center;gap:5px;white-space:nowrap;
   background:rgb(9 12 20 / .88);border-radius:999px;padding:4px 8px;font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums;color:#fff}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
@@ -120,6 +121,17 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
 .field{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:0 14px}
 .field svg{width:20px;height:20px;color:var(--muted);flex-shrink:0}
 .field input{flex:1;min-width:0;background:transparent;border:0;outline:0;padding:14px 0;font-size:16px}
+.sb-row{display:flex;gap:8px;align-items:stretch}
+.sb-row .field{flex:1;min-width:0}
+.clear{width:28px;height:28px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;flex-shrink:0;color:var(--muted)}
+.clear svg{width:14px;height:14px}
+.langsel{position:relative;display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:0 12px;font-weight:600;font-size:14px;flex-shrink:0}
+.langsel .fl{font-size:20px;line-height:1}
+.langsel svg{width:14px;height:14px;color:var(--muted)}
+.langsel select{position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:16px;cursor:pointer}
+.row .own2{font-size:11px;font-weight:600;color:var(--accent)}
+.row .pr .fl{margin-right:4px}
+.more{align-self:center}
 .hint{color:var(--muted);font-size:14px;display:flex;flex-direction:column;gap:12px}
 
 /* Vide */
@@ -240,10 +252,17 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
   <!-- RECHERCHE -->
   <section class="screen" id="s-search" data-screen="recherche" hidden>
     <div class="searchbar">
-      <form class="field" id="search-form" role="search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="search" id="q" placeholder="Ex. : Dracaufeu, Noctali, Pikachu" autocomplete="off" enterkeyhint="search" aria-label="Nom de la carte">
-      </form>
+      <div class="sb-row">
+        <form class="field" id="search-form" role="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="text" id="q" placeholder="Ex. : Dracaufeu" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Nom de la carte">
+          <button class="clear" type="button" id="q-clear" aria-label="Effacer" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </form>
+        <label class="langsel" for="lang"><span class="fl" id="lang-flag">🇫🇷</span><span id="lang-code">FR</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          <select id="lang" aria-label="Langue des cartes"><option value="fr">🇫🇷 Cartes françaises</option><option value="ja">🇯🇵 Cartes japonaises</option><option value="en">🇺🇸 Cartes anglaises (US)</option></select>
+        </label>
+      </div>
     </div>
     <div class="sync" id="search-status"></div>
     <div id="results"></div>
@@ -306,7 +325,16 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
 
 <script>
 (() => {
-  const API = "https://api.tcgdex.net/v2/fr";
+  const api = l => "https://api.tcgdex.net/v2/" + (l || "fr");
+  const LANGS = {
+    fr: { flag: "🇫🇷", code: "FR", ph: "Ex. : Dracaufeu", chips: ["Dracaufeu", "Pikachu", "Noctali", "Mew", "Lugia", "Rayquaza", "Évoli"] },
+    ja: { flag: "🇯🇵", code: "JP", ph: "Ex. : リザードン", chips: ["リザードン", "ピカチュウ", "ブラッキー", "ミュウ", "ルギア", "レックウザ", "イーブイ"] },
+    en: { flag: "🇺🇸", code: "US", ph: "Ex. : Charizard", chips: ["Charizard", "Pikachu", "Umbreon", "Mew", "Lugia", "Rayquaza", "Eevee"] }
+  };
+  const langOf = c => c?.lang || "fr";
+  const keyOf = (lang, id) => !lang || lang === "fr" ? id : lang + ":" + id;
+  const parseKey = k => k.includes(":") ? { lang: k.split(":")[0], id: k.slice(k.indexOf(":") + 1) } : { lang: "fr", id: k };
+  const kOf = c => c.key || keyOf(langOf(c), c.id);
   const STALE_MS = 12 * 3600 * 1000;
   const TREND_IDS = ["sv03.5-199","sv08.5-161","swsh7-215","swsh7-218","sv04.5-234","sv08-238","sv03-223","sv03.5-193","sv03.5-205","sv08.5-156","sv08.5-155","sv03.5-201"];
   const KEY = "radar-cotes-v1", HKEY = "rc-hist", TKEY = "rc-trends";
@@ -317,7 +345,17 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
 
   const $ = s => document.querySelector(s);
   const eur = v => v == null || !isFinite(v) ? "—" : v.toLocaleString("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: Math.abs(v) >= 100 ? 0 : 2 });
-  const usd = v => v == null || !isFinite(v) ? "—" : v.toLocaleString("fr-FR", { style: "currency", currency: "USD", maximumFractionDigits: v >= 100 ? 0 : 2 });
+  const usd = v => v == null || !isFinite(v) ? "—" : v.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: v >= 100 ? 0 : 2 });
+  const usd0 = v => v == null || !isFinite(v) ? "—" : v.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: Math.abs(v) >= 100 ? 0 : 2 });
+  // Prix affiché : TCGplayer ($) pour les cartes US, sinon Cardmarket (€)
+  function mainPrice(c) {
+    const p = c?.last || {};
+    if (langOf(c) === "en" && p.tcg != null) return { v: p.tcg, txt: usd0(p.tcg) };
+    if (p.trend != null) return { v: p.trend, txt: eur(p.trend) };
+    if (p.tcg != null) return { v: p.tcg, txt: usd0(p.tcg) };
+    return { v: null, txt: "—" };
+  }
+  const flagOf = c => LANGS[langOf(c)].flag;
   const pct = v => v == null || !isFinite(v) ? "—" : (v > 0 ? "+" : "") + (v * 100).toFixed(1).replace(".", ",") + " %";
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const cls = v => v == null ? "flat" : v <= -0.02 ? "down" : v >= 0.02 ? "up" : "flat";
@@ -329,8 +367,9 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
   /* ---------- État ---------- */
   let cards = ls.get(KEY, null);
   if (!cards) { cards = {}; SEED.forEach(d => cards[d.id] = d); ls.set(KEY, cards); }
-  const ui = { screen: "collection", csort: "value", mview: "list", mfilter: "all", tsort: "down", results: null, sheet: null, confirm: false, busy: false };
-  try { ui.csort = localStorage.getItem("rc-csort") || "value"; } catch { }
+  const ui = { lang: "fr", screen: "collection", csort: "value", mview: "list", mfilter: "all", tsort: "down", results: null, sheet: null, confirm: false, busy: false };
+  try { ui.csort = localStorage.getItem("rc-csort") || "value"; const l = localStorage.getItem("rc-lang"); if (LANGS[l]) ui.lang = l; } catch { }
+  const dcache = new Map();
   let trends = ls.get(TKEY, { at: null, docs: [] });
   const save = () => { if (!ls.set(KEY, cards)) toast("Ton navigateur bloque la sauvegarde : tes changements seront perdus.", true); };
   const list = () => Object.values(cards).filter(c => c && c.name);
@@ -350,13 +389,14 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     return { trend: pick(cm.trend, cm["trend-holo"]), avg: pick(cm.avg, cm["avg-holo"]), low: pick(cm.low, cm["low-holo"]),
       avg7: pick(cm.avg7, cm["avg7-holo"]), avg30: pick(cm.avg30, cm["avg30-holo"]), updated: cm.updated || null, tcg: tv.marketPrice ?? null };
   }
-  function cardDoc(card, prev) {
+  function cardDoc(card, prev, lang) {
+    lang = lang || prev?.lang || "fr";
     const last = pickPrices(card);
     const history = (prev?.history || []).slice();
     const day = (last.updated || new Date().toISOString()).slice(0, 10);
     if (last.trend != null && !history.some(h => h.d === day)) history.push({ d: day, t: last.trend });
-    return { id: card.id, name: card.name, setName: card.set?.name || "", setId: card.set?.id || "", localId: card.localId || "", rarity: card.rarity || "",
-      image: card.image || prev?.image || null, enName: prev?.enName || null,
+    return { id: card.id, lang, key: keyOf(lang, card.id), name: card.name, setName: card.set?.name || "", setId: card.set?.id || "", localId: card.localId || "", rarity: card.rarity || "",
+      image: card.image || prev?.image || null, enName: prev?.enName || (lang === "en" ? card.name : null),
       tcgId: card.variants_detailed?.[0]?.thirdParty?.tcgplayer ?? prev?.tcgId ?? null,
       last, history: history.slice(-180), fetchedAt: new Date().toISOString(), addedAt: prev?.addedAt || new Date().toISOString(),
       owned: prev?.owned ?? 0, paid: prev?.paid ?? null, example: prev?.example ?? false };
@@ -391,20 +431,20 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     : `<span class="ph">${esc(c.name)}</span>`;
   function tile(c, opts = {}) {
     const a = analyse(c), p = c.last || {}, q = c.owned || 0;
-    return `<button class="tile" type="button" data-open="${esc(c.id)}" data-src="${opts.src || "saved"}">
+    return `<button class="tile" type="button" data-open="${esc(kOf(c))}" data-src="${opts.src || "saved"}">
       <span class="art" data-name="${esc(c.name)}">${imgTag(c, "low")}
-        ${q > 1 ? `<span class="qtyb">×${q}</span>` : ""}${opts.badgeOwned && cards[c.id] ? `<span class="ownb">${cards[c.id].owned ? "Possédée" : "Suivie"}</span>` : ""}
-        ${opts.noPrice ? "" : `<span class="badge"><span class="dot ${cls(a.d30)}"></span>${eur(p.trend)}</span>`}
+        ${q > 1 ? `<span class="qtyb">×${q}</span>` : ""}
+        ${opts.noPrice ? "" : `<span class="badge"><span class="fl">${flagOf(c)}</span>${mainPrice(c).txt}<span class="dot ${cls(a.d30)}"></span></span>`}
       </span>
       <div class="cap">${esc(opts.caption ?? c.name)}</div>
     </button>`;
   }
   function row(c, src) {
     const a = analyse(c), p = c.last || {};
-    return `<button class="row" type="button" data-open="${esc(c.id)}" data-src="${src}">
+    return `<button class="row" type="button" data-open="${esc(kOf(c))}" data-src="${src}">
       <span class="th" data-name="">${imgTag(c, "low", "")}</span>
       <span style="min-width:0"><div class="nm">${esc(c.name)}</div><div class="st">${esc([c.setName, c.localId && "n° " + c.localId].filter(Boolean).join(" · "))}</div><span class="sig ${a.sig}">${a.label}</span></span>
-      <span class="rt"><span class="pr">${eur(p.trend)}</span><span class="chg ${cls(a.d30)}">${pct(a.d30)} · 30 j</span></span>
+      <span class="rt"><span class="pr"><span class="fl">${flagOf(c)}</span>${mainPrice(c).txt}</span><span class="chg ${cls(a.d30)}">${pct(a.d30)} · 30 j</span></span>
     </button>`;
   }
   const latestCote = arr => { const d = arr.map(c => c.last?.updated).filter(Boolean).sort().pop(); return d ? new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : "—"; };
@@ -420,8 +460,9 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     const total = owned.reduce((s, c) => s + (c.last?.trend || 0) * c.owned, 0);
     const t30 = owned.reduce((s, c) => s + (c.last?.avg30 || c.last?.trend || 0) * c.owned, 0);
     const t7 = owned.reduce((s, c) => s + (c.last?.avg7 || c.last?.trend || 0) * c.owned, 0);
+    const usdOnly = owned.filter(c => c.last?.trend == null && c.last?.tcg != null).reduce((s, c) => s + c.last.tcg * c.owned, 0);
     $("#h-total").textContent = nb ? eur(total) : "0 €";
-    $("#h-count").textContent = nb;
+    $("#h-count").textContent = nb + (usdOnly ? ` · + ${usd0(usdOnly)} (cartes US sans cote €)` : "");
     const chg = t30 ? (total - t30) / t30 : null;
     const hc = $("#h-chg"); hc.className = "chg " + cls(chg); hc.textContent = nb && chg != null ? `${total - t30 >= 0 ? "+" : ""}${eur(total - t30)} (30 j)` : "";
     const paidC = owned.filter(c => c.paid > 0 && c.last?.trend != null);
@@ -457,27 +498,72 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
   }
 
   /* ---------- Écran Recherche ---------- */
+  const PAGE = 30;
+  function syncLangUI() {
+    const L = LANGS[ui.lang]; $("#lang").value = ui.lang; $("#lang-flag").textContent = L.flag; $("#lang-code").textContent = L.code; $("#q").placeholder = L.ph;
+  }
+  function resultRow(x) {
+    const key = keyOf(ui.lang, x.id), d = dcache.get(key), saved = cards[key];
+    const c = d || { ...x, lang: ui.lang };
+    const sub = d ? [d.setName, d.localId && "#" + d.localId].filter(Boolean).join(" · ") : "#" + (x.localId || "");
+    const price = d ? `<span class="fl">${flagOf(c)}</span>${mainPrice(d).txt}` : `<span style="color:var(--muted)">…</span>`;
+    return `<button class="row" type="button" data-open="${esc(key)}" data-src="search">
+      <span class="th" data-name="">${imgTag(c, "low", "")}</span>
+      <span style="min-width:0"><div class="nm">${esc(x.name)}</div><div class="st">${esc(sub)}</div></span>
+      <span class="rt"><span class="pr">${price}</span>${saved ? `<span class="own2">${saved.owned ? "Possédée" : "Suivie"}</span>` : ""}</span>
+    </button>`;
+  }
   function renderSearch() {
     const r = $("#results");
+    const L = LANGS[ui.lang];
     if (ui.results == null) {
-      r.innerHTML = `<div class="hint"><span>Tape le nom français d'une carte, puis touche l'image pour voir sa cote et l'ajouter.</span>
-        <div class="chips">${["Dracaufeu", "Pikachu", "Noctali", "Mew", "Lugia", "Rayquaza", "Évoli"].map(n => `<button class="chip" type="button" data-q="${n}">${n}</button>`).join("")}</div></div>`;
+      r.innerHTML = `<div class="hint"><span>Commence à taper le nom d'une carte : les résultats s'affichent au fur et à mesure, avec leur prix.</span>
+        <div class="chips">${L.chips.map(n => `<button class="chip" type="button" data-q="${esc(n)}">${esc(n)}</button>`).join("")}</div></div>`;
       return;
     }
     if (!ui.results.length) { r.innerHTML = ""; return; }
-    r.innerHTML = `<div class="grid">${ui.results.map(x => tile({ id: x.id, name: x.name, image: x.image }, { src: "search", noPrice: true, badgeOwned: true, caption: `${x.name} · ${x.id}` })).join("")}</div>`;
+    const shown = ui.results.slice(0, ui.shown);
+    r.innerHTML = `<div class="screen"><div class="rows">${shown.map(resultRow).join("")}</div>
+      ${ui.results.length > ui.shown ? `<button class="btn more" type="button" id="more">Afficher plus de cartes (${ui.results.length - ui.shown})</button>` : ""}</div>`;
   }
-  let sq = 0;
-  async function search(q) {
-    const my = ++sq, st = $("#search-status"); st.textContent = "Recherche…"; ui.results = []; renderSearch();
-    try {
-      const res = await getJSON(`${API}/cards?name=${encodeURIComponent(q)}&pagination:itemsPerPage=90`);
+  function updateRow(key) {
+    const el = document.querySelector(`#results [data-open="${CSS.escape(key)}"]`); if (!el) return;
+    const x = ui.results?.find(r => keyOf(ui.lang, r.id) === key); if (!x) return;
+    const tmp = document.createElement("div"); tmp.innerHTML = resultRow(x); el.replaceWith(tmp.firstElementChild);
+  }
+  async function enrich(my, from, to) {
+    const lang = ui.lang, todo = (ui.results || []).slice(from, to).filter(x => !dcache.has(keyOf(lang, x.id)));
+    await pool(todo, 6, async x => {
       if (my !== sq) return;
-      // cartes avec image d'abord, sans TCG Pocket
-      ui.results = (Array.isArray(res) ? res : []).filter(x => !/^(A\d|P-A|B\d)/.test(x.id)).sort((a, b) => (b.image ? 1 : 0) - (a.image ? 1 : 0));
-      st.textContent = ui.results.length ? `${ui.results.length} carte(s) pour « ${q} ». Touche une carte pour voir sa cote.` : `Aucune carte trouvée pour « ${q} ». Essaie le nom français (Dracaufeu, pas Charizard).`;
-    } catch { if (my === sq) { st.textContent = netMsg(); ui.results = []; } }
-    renderSearch();
+      const card = await getJSON(`${api(lang)}/cards/${encodeURIComponent(x.id)}`);
+      const key = keyOf(lang, x.id);
+      dcache.set(key, cardDoc(card, cards[key] || null, lang));
+      if (my === sq) updateRow(key);
+    });
+  }
+  let sq = 0, st0;
+  function norm(t) { return t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[-\s]/g, ""); }
+  async function search(q) {
+    const my = ++sq, st = $("#search-status"), lang = ui.lang;
+    if (lang === "ja" && /^[a-z0-9\s\-éèêàçùôî']+$/i.test(q)) { st.textContent = "En japonais, tape le nom en japonais (ex. リザードン pour Dracaufeu, ピカチュウ pour Pikachu)."; ui.results = []; renderSearch(); return; }
+    st.textContent = "Recherche…";
+    try {
+      const res = await getJSON(`${api(lang)}/cards?name=${encodeURIComponent(q)}`);
+      if (my !== sq) return;
+      const nq = norm(q);
+      const rank = x => { const n = norm(x.name || ""); return (n === nq ? 0 : n.startsWith(nq) ? 1 : 2) * 2 + (x.image ? 0 : 1); };
+      ui.results = (Array.isArray(res) ? res : []).filter(x => !/^(A\d|P-A|B\d)/.test(x.id)).sort((a, b) => rank(a) - rank(b));
+      ui.shown = PAGE;
+      st.textContent = ui.results.length ? `${ui.results.length} carte(s) ${LANGS[lang].flag}` : `Aucune carte trouvée pour « ${q} ».${lang === "fr" ? " Essaie le nom français (Dracaufeu, pas Charizard)." : ""}`;
+      renderSearch();
+      enrich(my, 0, ui.shown);
+    } catch { if (my === sq) { st.textContent = netMsg(); ui.results = []; renderSearch(); } }
+  }
+  function onType() {
+    const q = $("#q").value.trim(); $("#q-clear").hidden = !q;
+    clearTimeout(st0);
+    if (q.length < 2) { sq++; ui.results = null; $("#search-status").textContent = ""; renderSearch(); return; }
+    st0 = setTimeout(() => search(q), 260);
   }
 
   /* ---------- Écran Marché ---------- */
@@ -496,7 +582,7 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
       : `<div class="rows">${shown.map(r => row(r.c, "saved")).join("")}</div>`;
 
     document.querySelectorAll("#t-sort .chip").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === ui.tsort));
-    const td = trends.docs.map(c => ({ c: cards[c.id] ? { ...c, owned: cards[c.id].owned } : c, a: analyse(c) }));
+    const td = trends.docs.map(c => ({ c, a: analyse(c) }));
     const tb = { down: (x, y) => (x.a.d30 ?? 9) - (y.a.d30 ?? 9), up: (x, y) => (y.a.d30 ?? -9) - (x.a.d30 ?? -9), price: (x, y) => (y.c.last?.trend || 0) - (x.c.last?.trend || 0) };
     $("#t-rows").innerHTML = td.length ? `<div class="rows">${td.sort(tb[ui.tsort]).map(r => row(r.c, "trend")).join("")}</div>` : "";
     $("#t-status").textContent = td.length ? `Cartes très recherchées · cote du ${latestCote(trends.docs)}` : (ui.tload ? "Chargement des tendances…" : "");
@@ -505,8 +591,8 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     if (ui.tload) return;
     if (!force && trends.at && Date.now() - new Date(trends.at).getTime() < STALE_MS && trends.docs.length) return;
     ui.tload = true; renderMarket();
-    const res = await pool(TREND_IDS, 4, id => getJSON(`${API}/cards/${id}`));
-    const docs = res.filter(r => r && !r.__err && r.id).map(c => cardDoc(c, null)).filter(c => c.last.trend != null);
+    const res = await pool(TREND_IDS, 4, id => getJSON(`${api("fr")}/cards/${id}`));
+    const docs = res.filter(r => r && !r.__err && r.id).map(c => cardDoc(c, null, "fr")).filter(c => c.last.trend != null);
     ui.tload = false;
     if (docs.length) { trends = { at: new Date().toISOString(), docs }; ls.set(TKEY, trends); }
     else if (!trends.docs.length) $("#t-status").textContent = netMsg();
@@ -519,7 +605,7 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     const todo = list().filter(c => force || !c.fetchedAt || Date.now() - new Date(c.fetchedAt).getTime() > STALE_MS);
     if (!todo.length) { if (force) toast("Les cotes sont déjà à jour."); return; }
     ui.busy = true; $("#refresh").classList.add("busy");
-    const res = await pool(todo, 4, async c => { const card = await getJSON(`${API}/cards/${encodeURIComponent(c.id)}`); cards[c.id] = cardDoc(card, cards[c.id] || c); return true; });
+    const res = await pool(todo, 4, async c => { const k = kOf(c); const card = await getJSON(`${api(langOf(c))}/cards/${encodeURIComponent(c.id)}`); cards[k] = cardDoc(card, cards[k] || c, langOf(c)); return true; });
     const ok = res.filter(r => r === true).length;
     save(); ui.busy = false; $("#refresh").classList.remove("busy");
     if (ok < todo.length) toast(ok ? `${ok} carte(s) mise(s) à jour. ${netMsg()}` : netMsg(), true);
@@ -529,19 +615,20 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
   }
 
   /* ---------- Fiche carte ---------- */
-  async function openSheet(id, src) {
+  async function openSheet(key, src) {
     ui.confirm = false;
-    const saved = cards[id];
-    const fromTrend = trends.docs.find(c => c.id === id);
-    ui.sheet = { id, doc: saved || fromTrend || null };
+    const { lang, id } = parseKey(key);
+    const saved = cards[key];
+    const fromTrend = lang === "fr" ? trends.docs.find(c => c.id === id) : null;
+    ui.sheet = { key, id, lang, doc: saved || dcache.get(key) || fromTrend || null };
     $("#sheet").hidden = false; document.body.style.overflow = "hidden";
     renderSheet();
-    if (!ui.sheet.doc || (!saved && src === "search")) {
+    if (!ui.sheet.doc) {
       try {
-        const card = await getJSON(`${API}/cards/${encodeURIComponent(id)}`);
-        if (ui.sheet?.id !== id) return;
-        ui.sheet.doc = cardDoc(card, cards[id] || null); renderSheet();
-      } catch { if (ui.sheet?.id === id) { ui.sheet.err = true; renderSheet(); } }
+        const card = await getJSON(`${api(lang)}/cards/${encodeURIComponent(id)}`);
+        if (ui.sheet?.key !== key) return;
+        ui.sheet.doc = cardDoc(card, cards[key] || null, lang); dcache.set(key, ui.sheet.doc); renderSheet();
+      } catch { if (ui.sheet?.key === key) { ui.sheet.err = true; renderSheet(); } }
     }
   }
   function closeSheet() { $("#sheet").hidden = true; document.body.style.overflow = ""; ui.sheet = null; }
@@ -550,7 +637,7 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     const panel = $("#panel");
     const head = `<div class="grab"><span class="bar"></span><span></span><button class="icon-btn" type="button" data-x="close" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
     if (!s.doc) { panel.innerHTML = `<div class="panel-in">${head}<div class="d-loading">${s.err ? netMsg() : "Chargement de la carte…"}</div></div>`; return; }
-    const c = cards[s.id] || s.doc, saved = !!cards[s.id], p = c.last || {}, a = analyse(c), q = c.owned || 0;
+    const c = cards[s.key] || s.doc, saved = !!cards[s.key], p = c.last || {}, a = analyse(c), q = c.owned || 0, mp = mainPrice(c);
     const cm = "https://www.cardmarket.com/fr/Pokemon/Products/Search?searchString=" + encodeURIComponent((c.enName || c.name) + (c.localId ? " " + String(c.localId).replace(/^0+/, "") : ""));
     panel.innerHTML = `<div class="panel-in">${head}
       <div class="d-top">
@@ -558,7 +645,8 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
         <div class="d-info">
           <h3 id="d-name">${esc(c.name)}</h3>
           <div class="st">${esc([c.setName, c.localId && "n° " + c.localId, c.rarity].filter(Boolean).join(" · "))}</div>
-          <div class="pr">${eur(p.trend)}</div>
+          <div class="pr">${flagOf(c)} ${mp.txt}</div>
+          ${langOf(c) === "en" && p.tcg != null && p.trend != null ? `<div class="pq">TCGplayer (US) · Cardmarket : ${eur(p.trend)}</div>` : langOf(c) === "en" ? "" : `<div class="pq">Cote Cardmarket</div>`}
           ${q > 1 && p.trend != null ? `<div class="pq">${q} exemplaires = ${eur(p.trend * q)}</div>` : ""}
           <div class="d-chg"><span class="${cls(a.d7)}">${pct(a.d7)} · 7 j</span><span class="${cls(a.d30)}">${pct(a.d30)} · 30 j</span></div>
           <span><span class="sig ${a.sig}">${a.label}</span></span>
@@ -592,16 +680,17 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     </div>`;
   }
   async function addCard(owned) {
-    const d = ui.sheet?.doc; if (!d) return;
-    cards[d.id] = { ...d, owned: owned ? 1 : 0, example: false, addedAt: new Date().toISOString() }; save();
+    const d = ui.sheet?.doc; if (!d) return; const k = ui.sheet.key;
+    cards[k] = { ...d, key: k, owned: owned ? 1 : 0, example: false, addedAt: new Date().toISOString() }; save();
     toast(owned ? `${d.name} ajoutée à ta collection.` : `${d.name} ajoutée à ta liste de suivi.`);
     renderSheet(); renderAll();
-    try { const en = await getJSON(`https://api.tcgdex.net/v2/en/cards/${encodeURIComponent(d.id)}`); if (cards[d.id] && en?.name) { cards[d.id].enName = en.name; save(); } } catch { }
+    if (langOf(d) === "fr") { try { const en = await getJSON(`${api("en")}/cards/${encodeURIComponent(d.id)}`); if (cards[k] && en?.name) { cards[k].enName = en.name; save(); } } catch { } }
   }
 
   /* ---------- Navigation ---------- */
   const SCREENS = { collection: "#s-collection", recherche: "#s-search", marche: "#s-market" };
   function route() {
+    if (ui.sheet) closeSheet();
     const h = (location.hash || "").slice(1); ui.screen = SCREENS[h] ? h : "collection";
     for (const [k, sel] of Object.entries(SCREENS)) $(sel).hidden = k !== ui.screen;
     document.querySelectorAll(".tab").forEach(t => t.toggleAttribute("aria-current", false));
@@ -620,18 +709,22 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
   $("#refresh").addEventListener("click", () => refresh(true));
   document.addEventListener("click", e => {
     const o = e.target.closest("[data-open]"); if (o) { openSheet(o.dataset.open, o.dataset.src); return; }
-    const q = e.target.closest("[data-q]"); if (q) { $("#q").value = q.dataset.q; search(q.dataset.q); }
+    const q = e.target.closest("[data-q]"); if (q) { $("#q").value = q.dataset.q; onType(); }
+    if (e.target.closest("#more")) { ui.shown += PAGE; renderSearch(); enrich(sq, ui.shown - PAGE, ui.shown); }
   });
   $("#c-sort").addEventListener("click", e => { const b = e.target.closest("[data-s]"); if (!b) return; ui.csort = b.dataset.s; try { localStorage.setItem("rc-csort", ui.csort); } catch { } renderCollection(); });
   $("#m-filter").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; ui.mfilter = b.dataset.f; renderMarket(); });
   $("#t-sort").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; ui.tsort = b.dataset.t; renderMarket(); });
   document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => { ui.mview = b.dataset.m; renderMarket(); if (ui.mview === "trends") loadTrends(false); }));
-  $("#search-form").addEventListener("submit", e => { e.preventDefault(); const q = $("#q").value.trim(); if (q.length >= 2) { $("#q").blur(); search(q); } });
+  $("#search-form").addEventListener("submit", e => { e.preventDefault(); $("#q").blur(); });
+  $("#q").addEventListener("input", onType);
+  $("#q-clear").addEventListener("click", () => { $("#q").value = ""; onType(); $("#q").focus(); });
+  $("#lang").addEventListener("change", e => { ui.lang = e.target.value; try { localStorage.setItem("rc-lang", ui.lang); } catch { } syncLangUI(); ui.results = null; onType(); });
   $("#sheet").addEventListener("click", e => { if (e.target.id === "sheet") closeSheet(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && ui.sheet) closeSheet(); });
   $("#panel").addEventListener("click", e => {
     const b = e.target.closest("[data-x]"); if (!b || !ui.sheet) return;
-    const id = ui.sheet.id, c = cards[id], x = b.dataset.x;
+    const id = ui.sheet.key, c = cards[id], x = b.dataset.x;
     if (x === "close") closeSheet();
     else if (x === "own") addCard(true);
     else if (x === "watch") addCard(false);
@@ -645,9 +738,9 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     else if (x === "del" && c) { delete cards[id]; save(); toast(`${c.name} retirée.`); closeSheet(); renderAll(); }
   });
   $("#panel").addEventListener("change", e => {
-    if (e.target.id !== "paid" || !ui.sheet || !cards[ui.sheet.id]) return;
+    if (e.target.id !== "paid" || !ui.sheet || !cards[ui.sheet.key]) return;
     const v = parseFloat(String(e.target.value).replace(/\s/g, "").replace(",", ".").replace("€", ""));
-    cards[ui.sheet.id].paid = isFinite(v) && v > 0 ? v : null; save(); toast("Prix payé enregistré."); renderSheet(); renderAll();
+    cards[ui.sheet.key].paid = isFinite(v) && v > 0 ? v : null; save(); toast("Prix payé enregistré."); renderSheet(); renderAll();
   });
   $("#export").addEventListener("click", () => {
     const blob = new Blob([JSON.stringify(list(), null, 1)], { type: "application/json" });
@@ -656,12 +749,13 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
   });
   $("#import").addEventListener("change", async e => {
     const f = e.target.files?.[0]; if (!f) return;
-    try { const arr = JSON.parse(await f.text()); if (!Array.isArray(arr)) throw 0; let n = 0; arr.forEach(d => { if (d && d.id && d.name) { cards[d.id] = d; n++; } }); save(); renderAll(); toast(`${n} carte(s) importée(s).`); }
+    try { const arr = JSON.parse(await f.text()); if (!Array.isArray(arr)) throw 0; let n = 0; arr.forEach(d => { if (d && d.id && d.name) { cards[kOf(d)] = d; n++; } }); save(); renderAll(); toast(`${n} carte(s) importée(s).`); }
     catch { toast("Ce fichier n'est pas une sauvegarde Radar à Cotes.", true); }
     e.target.value = "";
   });
 
   /* ---------- Démarrage ---------- */
+  syncLangUI();
   route();
   refresh(false);
 })();
