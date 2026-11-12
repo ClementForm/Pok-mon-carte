@@ -685,13 +685,12 @@ main{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-lef
     const upd = p.updated ? new Date(p.updated).toLocaleDateString("fr-FR") : "—";
     const mkRow = (src, lab, val, cls2) => `<div class="mk-row"><span class="mk-src ${cls2 || ""}">${src}</span><span class="mk-lab">${lab}</span><span class="mk-val">${val}</span></div>`;
     const rows = [
-      p.trend != null && mkRow("Cardmarket", "Cote (tendance)", eur(p.trend)),
       p.low != null && mkRow("Cardmarket", "À partir de", eur(p.low)),
-      p.avg1 != null && mkRow("Cardmarket", `Moyenne 1 jour${p.updated ? " (" + new Date(p.updated).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) + ")" : ""}`, eur(p.avg1)),
-      p.avg7 != null && mkRow("Cardmarket", "Moyenne 7 jours", eur(p.avg7)),
-      p.avg30 != null && mkRow("Cardmarket", "Moyenne 30 jours", eur(p.avg30)),
-      p.tcg != null && mkRow("TCGplayer", "Prix du marché (US)", usd(p.tcg), "tcg"),
-      c.tcgLow != null && mkRow("TCGplayer", "Prix le plus bas (US)", usd(c.tcgLow), "tcg")
+      p.trend != null && mkRow("Cardmarket", "Tendance des prix", eur(p.trend)),
+      p.avg7 != null && mkRow("Cardmarket", "Prix moyen 7 jours", eur(p.avg7)),
+      p.avg1 != null && mkRow("Cardmarket", "Prix moyen 1 jour", eur(p.avg1)),
+      L === "en" && p.tcg != null && mkRow("TCGplayer", "Prix du marché (US)", usd(p.tcg), "tcg"),
+      L === "en" && c.tcgLow != null && mkRow("TCGplayer", "Prix le plus bas (US)", usd(c.tcgLow), "tcg")
     ].filter(Boolean).join("");
     const star = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.8 2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg>`;
     panel.innerHTML = `<div class="panel-in">${head}
